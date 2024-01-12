@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MNIST Digit Predictor</title>
+</head>
+<body>
+    <canvas id="canvas" width="280" height="280" style="border:1px solid #000000;"></canvas>
+    <button onclick="predict()">Predict</button>
+    <p id="prediction"></p>
+
+    <script>
+        var canvas = document.getElementById('canvas');
+        var ctx = canvas.getContext('2d');
+        var drawing = false;
+        var mousePos = { x:0, y:0 };
+        var lastPos = mousePos;
+
+        canvas.addEventListener('mousedown', function(e) {
+            drawing = true;
+            lastPos = getMousePos(canvas, e);
+        });
+
+        canvas.addEventListener('mouseup', function(e) {
+            drawing = false;
+        });
+
+        canvas.addEventListener('mousemove', function(e) {
+            mousePos = getMousePos(canvas, e);
+        });
+
+        function getMousePos(canvasDom, mouseEvent) {
+            var rect = canvasDom.getBoundingClientRect();
+            return {
+                x: mouseEvent.clientX - rect.left,
+                y: mouseEvent.clientY - rect.top
+            };
+        }
+
+        function renderCanvas() {
+            if (drawing) {
+                ctx.moveTo(lastPos.x, lastPos.y);
+                ctx.lineTo(mousePos.x, mousePos.y);
+                ctx.stroke();
+                lastPos = mousePos;
+            }
+        }
+
+        (function drawLoop() {
+            requestAnimationFrame(drawLoop);
+            renderCanvas();
+        })();
+
+        function predict() {
+            var canvas = document.getElementById('canvas');
+            var dataURL = canvas.toDataURL();
+
+            fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ image: dataURL })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('prediction').innerHTML = 'Predicted Digit: ' + data.digit;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
