@@ -33,14 +33,16 @@ def predict():
     # Convert to grayscale, resize and invert colors for MNIST
     image = image.convert('L').resize((28, 28))
     image = np.invert(image)
+
     # Normalize and reshape for the model
     image = np.array(image) / 255.0
     image = image.reshape((1, 28, 28, 1))
 
     # Predicting with the model
     predictions = mnist_model.predict(image)
+    probabilities = tf.nn.softmax(predictions[0]).numpy()
     predicted_digit = np.argmax(predictions[0])
-    print(predictions)  # To see the raw output
+    print(probabilities)  # To see the raw output
 
     return jsonify({'digit': int(predicted_digit)})
 
